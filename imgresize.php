@@ -1,32 +1,27 @@
 <?php
 
-
-/***********************************************************************************
-Функция img_resize(): генерация thumbnails
-Параметры:
-  $src             - имя исходного файла
-  $dest            - имя генерируемого файла
-  $width, $height  - ширина и высота генерируемого изображения, в пикселях
-Необязательные параметры:
-  $quality         - качество генерируемого JPEG, по умолчанию - максимальное (100)
-***********************************************************************************/
 function img_resize($mode, $src, $dest, $width, $height, $quality=100)
 {
+  $dest = getcwd(). $dest;
+  $src = getcwd() . "\\" . $src;
+  
+  //make dir if it isnt exist
+  if (!file_exists('.\\images\\cache\\' . $_GET['preset-name'])) {
+	mkdir('.\\images\\cache\\' . $_GET['preset-name']);
+  } 
+  
+
   if (!file_exists($src)) return false;
-
+  
   $size = getimagesize($src);
-
   if ($size === false) return false;
 
-  // Определяем исходный формат по MIME-информации, предоставленной
-  // функцией getimagesize, и выбираем соответствующую формату
-  // imagecreatefrom-функцию.
   $format = strtolower(substr($size['mime'], strpos($size['mime'], '/')+1));
   $icfunc = "imagecreatefrom" . $format;
   if (!function_exists($icfunc)) return false;
-		
+
   switch ($mode) {
-    case 'in':
+    case 'IN':
 	  $x_ratio = $width / $size[0];
 	  $y_ratio = $height / $size[1];
 
@@ -36,36 +31,25 @@ function img_resize($mode, $src, $dest, $width, $height, $quality=100)
 	  $left_offset = 0;
 	  $top_offset = 0;
 	  break;
-	case 'out':
+	case 'OUT':
 	  $x_ratio = $size[0] / $width;
 	  $y_ratio = $size[1] / $height;
 
 	  $ratio       = min($x_ratio, $y_ratio);
 	  $new_width   = floor($width * $ratio);
 	  $new_height  = floor($height * $ratio);
-	  
+
 	  $left_offset = ($size[0] - $new_width) / 2;
 	  $top_offset = ($size[1] - $new_height) / 2;
 	  $resize = true;
 	  break;
-	case 'exact':
+	case 'EXACT':
 	  $left_offset = 0;
 	  $top_offset = 0;
 	  $new_width   = $width;
 	  $new_height  = $height;
-	  
+
   }
-/*
-  echo 'Ширина исходной картинки ' . $size[0] . '<br>';
-  echo 'Высота исходной картинки ' . $size[1] . '<br>';
-  echo 'Ширина шаблона ' . $width . '<br>';
-  echo 'Высота шаблона ' . $height . '<br>';
-  echo 'Коэффициент сжатия ' . $ratio . '<br>';
-  echo 'Ширина результирующей картинки ' . $new_width . '<br>';
-  echo 'Высота результирующей картинки ' . $new_height . '<br>';
-  echo 'Координата X исходной картинки ' . $left_offset . '<br>';
-  echo 'Координата X исходной картинки ' . $top_offset . '<br>';
-*/
 
   $isrc = $icfunc($src);
   $idest = imagecreatetruecolor($new_width, $new_height);
@@ -80,7 +64,7 @@ function img_resize($mode, $src, $dest, $width, $height, $quality=100)
 	imagedestroy($resized);
   }
   
-  else imagejpeg($idest, $dest, $quality);
+  else if(!(imagejpeg($idest, $dest, $quality))) return false;
 
   imagedestroy($isrc);
   imagedestroy($idest);
